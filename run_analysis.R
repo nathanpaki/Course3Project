@@ -1,8 +1,19 @@
-### check if Directory exists
-if (!file.exists("data2")){
-  dir.create("data2")
-  
-}
+##  run_analysis.R
+## Written by Nathan Pakianathan
+## For Coursera Getting and Cleaning Data Project Assignment Week 4
+## Written and submitted on May 10, 2017
+
+
+# The purpose of this project is to demonstrate your ability to collect, work with, and clean a data set.
+# 
+# Review criteria
+# 
+# The submitted data set is tidy.
+# The Github repo contains the required scripts.
+# GitHub contains a code book that modifies and updates the available 
+#    codebooks with the data to indicate all the variables and summaries calculated, 
+#    along with units, and any other relevant information.
+# The README that explains the analysis files is clear and understandable.
 
 ## Check to see needed packages are installed
 ## dplyr
@@ -22,65 +33,90 @@ if (!"data.table" %in% installed.packages()) {
 library(dplyr)
 library(data.table)
 
+### check if Directory exists
+if (!file.exists("data2")){
+  dir.create("data2")
+  
+}
+
+
 ## set URL, Download and unzip data file
 
 fileUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
 download.file(fileUrl,destfile = "./data2/watch.zip")
 
-unzip ( "./data2/watch.zip",exdir = "./data2")
+## Unzip files
 
+unzip ( "./data2/watch.zip",exdir = "./data2")
 
 ## Reading Features table (colums headings)
 features<- read.table("./data2/UCI HAR Dataset/features.txt")
 
-
 ## Reading training table
-x_train <- read.table("./data2/UCI HAR Dataset/train/X_train.txt")
-y_train <- read.table("./data2/UCI HAR Dataset/train/y_train.txt")
+xtrain <- read.table("./data2/UCI HAR Dataset/train/X_train.txt")
+ytrain <- read.table("./data2/UCI HAR Dataset/train/y_train.txt")
 subject_train <- read.table("./data2/UCI HAR Dataset/train/subject_train.txt")
 
+
 ## Reading Testing table
-x_test <- read.table("./data2/UCI HAR Dataset/test/X_test.txt")
-y_test <- read.table("./data2/UCI HAR Dataset/test/y_test.txt")
+xtest <- read.table("./data2/UCI HAR Dataset/test/X_test.txt")
+ytest <- read.table("./data2/UCI HAR Dataset/test/y_test.txt")
 subject_test <- read.table("./data2/UCI HAR Dataset/test/subject_test.txt")
 
 ## Reading Activitiy table
 activityLabels = read.table('./data2/UCI HAR Dataset/activity_labels.txt')
 
+## Adding column labels is done below
 
-## Add column names to X train and X Test
+## Add column names to x_train and x_test
 
-colnames(x_train) <- features[,2] 
-colnames(x_test) <- features[,2]
+colnames(xtrain) <- features[,2] 
+colnames(xtest) <- features[,2]
 
-## Add column names to Y train and Y Test
-colnames(y_train) <-"activityId"
-colnames(y_test) <-"activityId"
+## Add column names to y_train and y_test
 
-## Add column names to Subject train
+colnames(ytrain) <-"activityId"
+colnames(ytest) <-"activityId"
+
+## Add column names to Subject_train and subject_test
 
 colnames(subject_train) <- "subjectId"
 colnames(subject_test) <- "subjectId"
 
+
 ## Add column names to Activity Labels
 colnames(activityLabels) <- c('activityId','activityType')
 
+
 ## Merge tables together - Colums and then rows
-merged_train <- cbind(y_train, subject_train, x_train)
-merged_test <- cbind(y_test, subject_test, x_test)
+## Columns
+mergedtrain <- cbind( subject_train, ytrain, xtrain)
+mergedtest <- cbind( subject_test,ytest, xtest)
 
-merged_all <- rbind(merged_train,merged_test)
+## Rows are merged here from Training and Testing data.
+##This is a complete set of data
 
-merged_allwithActivitNames <- merge(activityLabels,merged_all,by='activityId', all.x = TRUE)
+mergedall <- rbind(mergedtrain,mergedtest)
 
-## Find columns with mean and std
+## Get column names from mergedall dataset which has Mean and std. Also keep the activityLabels, subjectID
 
-columnnames <-colnames(merged_all)
+columnnames <-colnames(mergedall)
+meanstdcolumns <- (grepl("activityId",columnnames) | grepl("subjectId",columnnames) | grepl("mean..", columnnames)|
+                                             grepl("std..",columnnames))
 
-mean_std_columns <- (grepl("activityId",columnnames) | grepl("subjectId",columnnames) | grepl("mean..", columnnames)|
-                       +                      grepl("std..",columnnames))
 
-dsForMeanStd <- merged_allwithActivitNames[,mean_std_columns]
 
-secTidySet <- aggregate(. ~subjectId + activityId, dsForMeanStd, mean)
-secTidySetwithNames <- merge(activityLabels,secTidySet,by='activityId', all.x = TRUE)
+
+
+dsForMeanStd <- mergedall[,meanstdcolumns]
+
+tidyset <- aggregate(. ~activityId + subjectId, dsForMeanStd, mean)
+tidyset <- merge(activityLabels,tidyset,by='activityId', all.x = TRUE)
+
+
+## write the result to a text file
+write.table(tidyset,file="tidydata.txt",row.names = FALSE)
+
+
+
+
