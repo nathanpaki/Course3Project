@@ -51,3 +51,15 @@ meanstdcolums | Columns that has means and stds
 dsForMeanStd | dataset with mean and std columns only
 tidyset  | Tidyset
 tidydata.txt | the date file written 
+
+
+### Steps taken to accomplish
+1. Make sure the libraries and director exists.
+1. Set the URL
+1. Download the required file unzip
+1. Read the data files and assing to datasets
+1. Add column labels
+1. Merge datasets to form one large dataset
+1. Eliminate rows that are not needed.
+1. Summarize and calculate mean and create a tidy file
+1. Write tidyfile to a txt file
